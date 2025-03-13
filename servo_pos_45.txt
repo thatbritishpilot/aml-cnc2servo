@@ -1,0 +1,13 @@
+(Servo Position 4 - approximately 45 degrees)
+(Binary 0100 = decimal 4)
+
+(Set the binary pattern for position 4)
+M63 P0      (Set output 0 LOW - LSB)
+M63 P1      (Set output 1 LOW)
+M62 P2      (Set output 2 HIGH)
+M63 P3      (Set output 3 LOW - MSB)
+
+(Dwell to allow servo to move)
+G4 P0.5     (Dwell for 0.5 seconds)
+
+(End of macro) 
