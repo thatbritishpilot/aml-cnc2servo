@@ -1,10 +1,10 @@
-(Servo Position 8 - approximately 90 degrees)
-(Binary 1000 = decimal 8)
+(Servo Position 15 - 90 degrees)
+(Binary 1111 = decimal 15)
 
-(Set the binary pattern for position 8)
-M63 P0      (Set output 0 LOW - LSB)
-M63 P1      (Set output 1 LOW)
-M63 P2      (Set output 2 LOW)
+(Set the binary pattern for position 15)
+M62 P0      (Set output 0 HIGH - LSB)
+M62 P1      (Set output 1 HIGH)
+M62 P2      (Set output 2 HIGH)
 M62 P3      (Set output 3 HIGH - MSB)
 
 (Dwell to allow servo to move)

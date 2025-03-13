@@ -29,7 +29,7 @@ The sketch reads up to 4 digital inputs from the CNC machine, treating them as a
 - With 3 bits: 8 possible positions (0-7)
 - With 4 bits: 16 possible positions (0-15)
 
-The binary value is mapped to the servo's angle range (0-180 degrees by default).
+The binary value is mapped to the servo's angle range (0-90 degrees by default).
 
 ## Configuration
 
@@ -53,21 +53,21 @@ Configure your StepCraft CNC machine to control the servo:
 | Decimal | Binary | Approx. Angle |
 |---------|--------|---------------|
 | 0       | 0000   | 0°            |
-| 1       | 0001   | 12°           |
-| 2       | 0010   | 24°           |
-| 3       | 0011   | 36°           |
-| 4       | 0100   | 48°           |
-| 5       | 0101   | 60°           |
-| 6       | 0110   | 72°           |
-| 7       | 0111   | 84°           |
-| 8       | 1000   | 96°           |
-| 9       | 1001   | 108°          |
-| 10      | 1010   | 120°          |
-| 11      | 1011   | 132°          |
-| 12      | 1100   | 144°          |
-| 13      | 1101   | 156°          |
-| 14      | 1110   | 168°          |
-| 15      | 1111   | 180°          |
+| 1       | 0001   | 6°            |
+| 2       | 0010   | 12°           |
+| 3       | 0011   | 18°           |
+| 4       | 0100   | 24°           |
+| 5       | 0101   | 30°           |
+| 6       | 0110   | 36°           |
+| 7       | 0111   | 42°           |
+| 8       | 1000   | 48°           |
+| 9       | 1001   | 54°           |
+| 10      | 1010   | 60°           |
+| 11      | 1011   | 66°           |
+| 12      | 1100   | 72°           |
+| 13      | 1101   | 78°           |
+| 14      | 1110   | 84°           |
+| 15      | 1111   | 90°           |
 
 ## Example G-Code Files
 

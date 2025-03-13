@@ -6,6 +6,7 @@
  * to appropriate PWM signals for the servo.
  * 
  * Created by Claude, 2023
+ * Modified to limit servo motion to 0-90 degrees
  */
 
 #include <Servo.h>
@@ -24,7 +25,7 @@
 #define SERVO_MIN_PULSE 1000  // Minimum pulse width in microseconds (adjust for your servo)
 #define SERVO_MAX_PULSE 2000  // Maximum pulse width in microseconds (adjust for your servo)
 #define SERVO_MIN_ANGLE 0     // Minimum angle (degrees)
-#define SERVO_MAX_ANGLE 180   // Maximum angle (degrees)
+#define SERVO_MAX_ANGLE 90    // Maximum angle (degrees) - CHANGED FROM 180 TO 90
 
 // Number of bits to use for position encoding (2-4 bits supported)
 #define NUM_POSITION_BITS 4   // Change to match your setup
@@ -35,7 +36,7 @@ int lastServoPosition = -1;  // Track last position to avoid unnecessary updates
 void setup() {
   // Initialize serial communication for debugging
   Serial.begin(9600);
-  Serial.println("StepCraft CNC to Servo Interface");
+  Serial.println("StepCraft CNC to Servo Interface (0-90 degree range)");
   
   // Initialize input pins
   pinMode(INPUT_PIN1, INPUT_PULLUP);
