@@ -323,8 +323,8 @@
         }
         
         function updateAngleDisplay(position) {
-            // Calculate angle (170° to 10° range, reversed)
-            const angle = Math.round(170 - (position * (160 / 15)));
+            // Calculate angle (10° to 170° range)
+            const angle = Math.round(10 + (position * (160 / 15)));
             angleDisplay.textContent = `${angle}°`;
             positionDisplay.textContent = position;
             
