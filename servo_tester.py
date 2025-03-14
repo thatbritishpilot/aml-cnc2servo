@@ -16,6 +16,8 @@ app = Flask(__name__)
 arduino = None
 connected = False
 current_position = 0
+is_vibrating = False
+vibration_start_time = 0
 
 def find_arduino():
     """Find the Arduino Nano by listing all available serial ports"""
@@ -41,7 +43,7 @@ def connect_to_arduino(port):
 
 def set_binary_position(position):
     """Send a command to the Arduino to set the binary position"""
-    global arduino, connected, current_position
+    global arduino, connected, current_position, is_vibrating, vibration_start_time
     
     if not connected or arduino is None:
         return False
@@ -60,6 +62,8 @@ def set_binary_position(position):
         
         if response.startswith("OK"):
             current_position = position
+            is_vibrating = True
+            vibration_start_time = time.time()
             return True
         else:
             return False
@@ -109,14 +113,25 @@ def set_position():
     """Set the servo position"""
     position = int(request.form.get('position'))
     success = set_binary_position(position)
-    return jsonify({'success': success, 'position': position})
+    return jsonify({
+        'success': success, 
+        'position': position,
+        'is_vibrating': is_vibrating
+    })
 
 @app.route('/status', methods=['GET'])
 def status():
     """Get the current status"""
+    global is_vibrating, vibration_start_time
+    
+    # Check if vibration should end (after 5 seconds)
+    if is_vibrating and time.time() - vibration_start_time > 5:
+        is_vibrating = False
+    
     return jsonify({
         'connected': connected,
-        'position': current_position
+        'position': current_position,
+        'is_vibrating': is_vibrating
     })
 
 def create_templates():

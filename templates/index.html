@@ -122,6 +122,13 @@
             transform: translate(-50%, -100%) rotate(0deg);
             transition: transform 0.3s ease;
         }
+        .servo-arm.vibrating {
+            animation: vibrate 0.1s ease-in-out infinite alternate;
+        }
+        @keyframes vibrate {
+            0% { transform: translate(-50%, -100%) rotate(calc(var(--base-angle) - 15deg)); }
+            100% { transform: translate(-50%, -100%) rotate(calc(var(--base-angle) + 15deg)); }
+        }
     </style>
 </head>
 <body>
@@ -305,7 +312,7 @@
             const binary = position.toString(2).padStart(4, '0');
             
             for (let i = 0; i < 4; i++) {
-                const bitValue = binary[3 - i] === '1';
+                const bitValue = binary[i] === '1';
                 bits[i].textContent = bitValue ? '1' : '0';
                 if (bitValue) {
                     bits[i].classList.add('active');
@@ -316,8 +323,8 @@
         }
         
         function updateAngleDisplay(position) {
-            // Calculate angle (0-90 degrees)
-            const angle = Math.round(position * (90 / 15));
+            // Calculate angle (170° to 10° range, reversed)
+            const angle = Math.round(170 - (position * (160 / 15)));
             angleDisplay.textContent = `${angle}°`;
             positionDisplay.textContent = position;
             

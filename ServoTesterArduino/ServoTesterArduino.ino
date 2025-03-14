@@ -9,22 +9,30 @@
  */
 
 #include <Servo.h>
+#include <math.h>
 
 // Pin Definitions
 // Output pins to simulate CNC outputs
 #define OUTPUT_PIN1 2  // LSB
 #define OUTPUT_PIN2 3
 #define OUTPUT_PIN3 4
-#define OUTPUT_PIN4 5  // MSB (if used)
+#define OUTPUT_PIN4 5  // MSB
 
 // Servo control pin
 #define SERVO_PIN 9   // PWM capable pin on Arduino Nano
 
 // Servo parameters
-#define SERVO_MIN_PULSE 1000  // Minimum pulse width in microseconds (adjust for your servo)
-#define SERVO_MAX_PULSE 2000  // Maximum pulse width in microseconds (adjust for your servo)
-#define SERVO_MIN_ANGLE 0     // Minimum angle (degrees)
-#define SERVO_MAX_ANGLE 90    // Maximum angle (degrees)
+#define SERVO_MIN_PULSE 1000  // Minimum pulse width in microseconds
+#define SERVO_MAX_PULSE 2000  // Maximum pulse width in microseconds
+#define SERVO_MIN_PWM 0       // Minimum PWM value
+#define SERVO_MAX_PWM 255     // Maximum PWM value
+#define MOVEMENT_DURATION 1000 // Time to move between positions in milliseconds
+#define MOVEMENT_STEPS 50     // Number of steps for smooth movement
+
+// Vibration parameters
+#define VIBRATION_DURATION 5000  // Duration of vibration in milliseconds
+#define VIBRATION_AMPLITUDE 20   // Amplitude of vibration in PWM units
+#define VIBRATION_DELAY 20      // Delay between movements (20ms = 50Hz)
 
 // Number of bits to use for position encoding
 #define NUM_POSITION_BITS 4   // Using 4 bits for 16 positions
@@ -33,6 +41,7 @@ Servo myServo;
 int currentPosition = 0;
 String inputBuffer = "";
 bool inputComplete = false;
+volatile bool interruptVibration = false;  // Flag to interrupt vibration
 
 void setup() {
   // Initialize serial communication
@@ -55,7 +64,7 @@ void setup() {
   myServo.attach(SERVO_PIN, SERVO_MIN_PULSE, SERVO_MAX_PULSE);
   
   // Move servo to initial position
-  myServo.write(SERVO_MIN_ANGLE);
+  myServo.write(map(SERVO_MIN_PWM, 0, 255, 0, 180));
   delay(500);
 }
 
@@ -96,7 +105,7 @@ void processCommand(String command) {
     // Set the binary outputs
     setBinaryOutputs(position);
     
-    // Set the servo position
+    // Set the servo position and vibrate
     setServoPosition(position);
     
     // Send confirmation
@@ -123,12 +132,92 @@ void setBinaryOutputs(int position) {
 }
 
 void setServoPosition(int position) {
+  // Interrupt any ongoing vibration
+  interruptVibration = true;
+  
   // Calculate maximum possible position value based on number of bits
   int maxPosition = (1 << NUM_POSITION_BITS) - 1;
   
-  // Map position to servo angle range
-  int servoAngle = map(position, 0, maxPosition, SERVO_MIN_ANGLE, SERVO_MAX_ANGLE);
+  // Map position to PWM range
+  int targetPWM = map(position, 0, maxPosition, SERVO_MIN_PWM, SERVO_MAX_PWM);
   
-  // Set servo position
-  myServo.write(servoAngle);
+  // Get current servo position
+  int currentPWM = map(myServo.read(), 0, 180, 0, 255);
+  
+  // Calculate PWM difference
+  int pwmDiff = targetPWM - currentPWM;
+  
+  // Move smoothly to new position
+  unsigned long startTime = millis();
+  unsigned long lastStepTime = startTime;
+  int stepDelay = MOVEMENT_DURATION / MOVEMENT_STEPS;
+  int step = 1;
+  
+  // Non-blocking movement loop
+  while (step <= MOVEMENT_STEPS) {
+    unsigned long currentTime = millis();
+    
+    if (currentTime - lastStepTime >= stepDelay) {
+      // Calculate intermediate position using linear interpolation
+      float progress = (float)step / MOVEMENT_STEPS;
+      int newPWM = currentPWM + (pwmDiff * progress);
+      
+      // Convert PWM to degrees for the servo
+      int servoAngle = map(newPWM, 0, 255, 0, 180);
+      
+      // Move servo
+      myServo.write(servoAngle);
+      
+      lastStepTime = currentTime;
+      step++;
+    }
+    
+    // Check for serial input during movement
+    if (Serial.available() > 0) {
+      return;  // Exit if new command received
+    }
+  }
+  
+  // Ensure we reach exactly the target position
+  myServo.write(map(targetPWM, 0, 255, 0, 180));
+  
+  // Reset interrupt flag and start vibration
+  interruptVibration = false;
+  vibrateServo(targetPWM);
+}
+
+void vibrateServo(int basePWM) {
+  unsigned long startTime = millis();
+  unsigned long lastMove = 0;
+  int step = 0;
+  const int numSteps = 8;  // Number of positions in the vibration cycle
+  
+  // Pre-calculate vibration positions in PWM values
+  int positions[8];
+  for (int i = 0; i < numSteps; i++) {
+    int pwmOffset = (i < numSteps/2 ? VIBRATION_AMPLITUDE : -VIBRATION_AMPLITUDE);
+    positions[i] = constrain(basePWM + pwmOffset, SERVO_MIN_PWM, SERVO_MAX_PWM);
+  }
+  
+  while (millis() - startTime < VIBRATION_DURATION) {
+    // Check for interrupt flag or new serial data
+    if (interruptVibration || Serial.available() > 0) {
+      return;  // Exit immediately if interrupted
+    }
+    
+    unsigned long currentTime = millis();
+    
+    // Only update position at fixed intervals
+    if (currentTime - lastMove >= VIBRATION_DELAY) {
+      // Convert PWM to degrees for the servo
+      myServo.write(map(positions[step], 0, 255, 0, 180));
+      step = (step + 1) % numSteps;
+      lastMove = currentTime;
+    }
+  }
+  
+  // Only return to base position if we weren't interrupted
+  if (!interruptVibration) {
+    myServo.write(map(basePWM, 0, 255, 0, 180));
+  }
 } 
