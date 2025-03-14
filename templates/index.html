@@ -122,13 +122,6 @@
             transform: translate(-50%, -100%) rotate(0deg);
             transition: transform 0.3s ease;
         }
-        .servo-arm.vibrating {
-            animation: vibrate 0.1s ease-in-out infinite alternate;
-        }
-        @keyframes vibrate {
-            0% { transform: translate(-50%, -100%) rotate(calc(var(--base-angle) - 15deg)); }
-            100% { transform: translate(-50%, -100%) rotate(calc(var(--base-angle) + 15deg)); }
-        }
     </style>
 </head>
 <body>
@@ -154,16 +147,16 @@
         <div class="card">
             <h2>Binary Control</h2>
             <div class="binary-display">
-                <div class="bit" id="bit3">0</div>
-                <div class="bit" id="bit2">0</div>
-                <div class="bit" id="bit1">0</div>
                 <div class="bit" id="bit0">0</div>
+                <div class="bit" id="bit1">0</div>
+                <div class="bit" id="bit2">0</div>
+                <div class="bit" id="bit3">0</div>
             </div>
             <div class="controls">
-                <button id="bit3-toggle">Toggle MSB</button>
-                <button id="bit2-toggle">Toggle Bit 2</button>
-                <button id="bit1-toggle">Toggle Bit 1</button>
-                <button id="bit0-toggle">Toggle LSB</button>
+                <button id="bit0-toggle">Toggle Bit 1</button>
+                <button id="bit1-toggle">Toggle Bit 2</button>
+                <button id="bit2-toggle">Toggle Bit 3</button>
+                <button id="bit3-toggle">Toggle Bit 4</button>
             </div>
             <div class="position-buttons">
                 <button class="pos-button" data-position="0">0</button>
@@ -312,8 +305,8 @@
             const binary = position.toString(2).padStart(4, '0');
             
             for (let i = 0; i < 4; i++) {
-                const bitValue = binary[i] === '1';
-                bits[i].textContent = bitValue ? '1' : '0';
+                const bitValue = binary[3 - i] === '1';
+                bits[i].textContent = bitValue ? '1' : '0';  // Display in order: bit0 to bit3
                 if (bitValue) {
                     bits[i].classList.add('active');
                 } else {
@@ -323,13 +316,13 @@
         }
         
         function updateAngleDisplay(position) {
-            // Calculate angle (10° to 170° range)
-            const angle = Math.round(10 + (position * (160 / 15)));
+            // Calculate angle (0 to 90 degrees, counter-clockwise)
+            const angle = Math.round(position * (90 / 15));
             angleDisplay.textContent = `${angle}°`;
             positionDisplay.textContent = position;
             
-            // Update servo visualization
-            servoArm.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+            // Update servo visualization (negative for counter-clockwise rotation)
+            servoArm.style.transform = `translate(-50%, -100%) rotate(-${angle}deg)`;
         }
         
         async function setPosition(position) {
@@ -364,8 +357,7 @@
         // Bit toggle buttons
         bitToggles.forEach((button, index) => {
             button.addEventListener('click', () => {
-                const bitIndex = 3 - index;
-                const bitValue = 1 << bitIndex;
+                const bitValue = 1 << index;  // Use index directly for bit position
                 const newPosition = currentPosition ^ bitValue;
                 setPosition(newPosition);
             });
