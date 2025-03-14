@@ -7,6 +7,7 @@ This project provides a web interface for testing a servo motor that interfaces 
 ### Hardware
 - Arduino Nano or compatible board
 - Servo motor (tested with ReadyTOSky 12kg servo)
+- Power supply (6V, 2A) for servo operation
 - USB cable for Arduino connection
 
 ### Software
